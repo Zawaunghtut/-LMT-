@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>မြန်မာမြို့ပြဒေသများ၏ ဒေသိယစံတော်ချိန် (LMT) တွက်ကိရိယာ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS Styles */
+        :root {
+            --primary: #1a237e; --primary-light: #534bae; --primary-dark: #000051;
+            --secondary: #ffd700; --secondary-light: #ffff52; --secondary-dark: #c8a600;
+            --background: #f9f9f9; --surface: #ffffff; --text-primary: #2c3e50;
+            --text-secondary: #546e7a; --border: #e0e0e0; --success: #4caf50;
+            --warning: #ff9800; --error: #f44336; --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12); --radius: 12px; --transition: all 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Pyidaungsu', 'Noto Sans Myanmar', 'Segoe UI', sans-serif; background-color: var(--background); padding: 20px; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border-radius: var(--radius); position: relative; }
+        .main-content { display: grid; grid-template-columns: 1fr; gap: 30px; }
+        @media (min-width: 992px) { .main-content { grid-template-columns: 1fr 1.2fr; } }
+        .card { background-color: var(--surface); border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow); height: fit-content; }
+        .card-title { color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid var(--secondary); display: flex; align-items: center; gap: 10px; }
+        .calculator-section { background: linear-gradient(135deg, #e8eaf6 0%, #f3e5f5 100%); padding: 20px; border-radius: var(--radius); margin-bottom: 25px; }
+        .form-control { flex: 1; }
+        input, select { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 16px; }
+        .btn { padding: 12px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; font-weight: bold; }
+        .result-display { background: white; padding: 20px; border-radius: var(--radius); text-align: center; border-left: 5px solid var(--secondary); }
+        .result-value { font-size: 2.5rem; font-weight: bold; color: var(--primary); }
+        .table-container { overflow-y: auto; max-height: 600px; border-radius: var(--radius); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--primary); color: white; padding: 12px; position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid var(--border); }
+        tr:hover { background-color: #f5f5f5; cursor: pointer; }
+        tr.selected { background-color: #e3f2fd; border-left: 4px solid var(--primary); }
+        .search-box { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 50px; border: 2px solid var(--border); }
+        .city-count { background: var(--secondary); color: var(--primary); padding: 5px 15px; border-radius: 20px; font-weight: bold; display: inline-block; margin-top: 10px; }
+        .region-filter { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .region-btn { padding: 8px 15px; background: #e0e0e0; border: none; border-radius: 20px; cursor: pointer; }
+        .region-btn.active { background: var(--primary); color: white; }
+        .status-bar { background: #e8f5e9; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-clock"></i> မြန်မာမြို့ပြဒေသများ၏ (LMT) တွက်ကိရိယာ</h1>
+            <p>အခြေခံ မြို့ပေါင်း ၂၀၀ ကျော် စာရင်း</p>
+            <div class="city-count">စုစုပေါင်း: ၂၀၅ မြို့</div>
+        </header>
+
+        <div class="status-bar">
+            <div><i class="fas fa-info-circle"></i> မြို့တစ်ခုကို ဇယားမှ နှိပ်၍ ရွေးချယ်ပါ</div>
+            <div id="currentSelection">ရွေးချယ်ထားသောမြို့: မရွေးရသေး</div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-calculator"></i> LMT တွက်ချက်ရန်</h2>
+                <div class="calculator-section">
+                    <label>မြန်မာစံတော်ချိန် (MST) <span id="currentMST"></span></label>
+                    <input type="time" id="mstTime" value="12:00" style="margin-bottom: 15px;">
+                    
+                    <div id="selectedCityInfo" style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 8px; border: 2px dashed var(--border);">
+                        <div style="display: flex; justify-content: space-between;">
+                            <div>
+                                <strong id="selectedCityName" style="font-size: 1.2rem;">မြို့မရွေးရသေးပါ</strong><br>
+                                <small id="selectedCityRegion" style="color: var(--text-secondary);">စာရင်းမှ ရွေးချယ်ပါ</small>
+                            </div>
+                            <div id="cityCoordinates" style="text-align: right; font-size: 0.9rem;">
+                                <div>ညှိကိန်း: <span id="correctionValue">--:--</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn" id="calculateBtn">
+                        <i class="fas fa-calculator"></i> တွက်ချက်ပါ
+                    </button>
+                </div>
+                <div class="result-display">
+                    <div style="margin-bottom: 10px; color: var(--text-secondary);">ဒေသိယစံတော်ချိန် (LMT)</div>
+                    <div class="result-value" id="lmtResult">--:--:--</div>
+                    <div id="calculationDetails" style="font-size: 0.9rem; color: #666; margin-top: 10px; background: #f5f5f5; padding: 10px; border-radius: 8px;"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 class="card-title"><i class="fas fa-city"></i> မြို့များစာရင်း</h2>
+                    <div class="region-filter" id="regionFilter">
+                        <button class="region-btn active" data-region="all">အားလုံး</button>
+                        <button class="region-btn" data-region="ရန်ကုန်တိုင်း">ရန်ကုန်</button>
+                        <button class="region-btn" data-region="မန္တလေးတိုင်း">မန္တလေး</button>
+                        <button class="region-btn" data-region="စစ်ကိုင်းတိုင်း">စစ်ကိုင်း</button>
+                    </div>
+                </div>
+                
+                <input type="text" id="searchInput" class="search-box" placeholder="မြို့အမည်ဖြင့် ရှာဖွေပါ...">
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>မြို့အမည်</th><th>ဒေသ</th><th>ညှိကိန်း</th><th>တည်နေရာ</th></tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PDF ဖိုင်မှ ထုတ်ယူထားသော မြို့ပေါင်း ၂၀၀ ကျော် ဒေတာစာရင်း
+        const cityData = [
+            // ကချင်ပြည်နယ် (၂၀ မြို့)
+            {region: "ကချင်ပြည်နယ်", name: "ကဇူ", latD: 25, latM: 8, lonD: 97, lonM: 7, corrM: 0, corrS: 16},
+            {region: "ကချင်ပြည်နယ်", name: "ကာမိုင်း", latD: 25, latM: 31, lonD: 96, lonM: 43, corrM: -3, corrS: 8},
+            {region: "ကချင်ပြည်နယ်", name: "မြစ်ကြီးနား", latD: 25, latM: 23, lonD: 97, lonM: 24, corrM: 0, corrS: -32},
+            {region: "ကချင်ပြည်နယ်", name: "ဗန်းမော်", latD: 24, latM: 15, lonD: 97, lonM: 14, corrM: -0, corrS: -4},
+            {region: "ကချင်ပြည်နယ်", name: "မိုးညှင်း", latD: 24, latM: 46, lonD: 96, lonM: 22, corrM: -4, corrS: -32},
+            {region: "ကချင်ပြည်နယ်", name: "ပူတာအို", latD: 27, latM: 21, lonD: 97, lonM: 24, corrM: -0, corrS: -24},
+            {region: "ကချင်ပြည်နယ်", name: "ဝိုင်းမော်", latD: 26, latM: 12, lonD: 97, lonM: 56, corrM: 1, corrS: 44},
+            {region: "ကချင်ပြည်နယ်", name: "ခေါင်လန်ဖူး", latD: 26, latM: 19, lonD: 97, lonM: 18, corrM: -0, corrS: -48},
+            {region: "ကချင်ပြည်နယ်", name: "တနိုင်း", latD: 24, latM: 52, lonD: 97, lonM: 33, corrM: 0, corrS: 12},
+            {region: "ကချင်ပြည်နယ်", name: "စစ်ကိုင်း", latD: 24, latM: 39, lonD: 97, lonM: 1, corrM: -1, corrS: -56},
+            {region: "ကချင်ပြည်နယ်", name: "ရွှေကူ", latD: 24, latM: 18, lonD: 97, lonM: 17, corrM: -0, corrS: -52},
+            {region: "ကချင်ပြည်နယ်", name: "ဆော့လော်", latD: 25, latM: 42, lonD: 98, lonM: 6, corrM: 2, corrS: 24},
+            {region: "ကချင်ပြည်နယ်", name: "ဆီးဆိုင်", latD: 24, latM: 53, lonD: 97, lonM: 9, corrM: -1, corrS: -24},
+            {region: "ကချင်ပြည်နယ်", name: "ဖားကန့်", latD: 25, latM: 19, lonD: 96, lonM: 0, corrM: -6, corrS: 0},
+            {region: "ကချင်ပြည်နယ်", name: "မခေါင်", latD: 25, latM: 31, lonD: 97, lonM: 24, corrM: -0, corrS: -24},
+            {region: "ကချင်ပြည်နယ်", name: "မန်စီ", latD: 24, latM: 27, lonD: 97, lonM: 15, corrM: -0, corrS: -60},
+            {region: "ကချင်ပြည်နယ်", name: "လောက်ကိုင်", latD: 23, latM: 58, lonD: 97, lonM: 45, corrM: 1, corrS: 0},
+            {region: "ကချင်ပြည်နယ်", name: "ဟိုပင်", latD: 23, latM: 22, lonD: 98, lonM: 1, corrM: 2, corrS: 4},
+            {region: "ကချင်ပြည်နယ်", name: "အင်ဂျန်းယန်", latD: 25, latM: 27, lonD: 97, lonM: 25, corrM: -0, corrS: -20},
+            {region: "ကချင်ပြည်နယ်", name: "လဟယ်", latD: 26, latM: 39, lonD: 97, lonM: 45, corrM: 1, corrS: 0},
+
+            // ကယားပြည်နယ် (၁၂ မြို့)
+            {region: "ကယားပြည်နယ်", name: "လွိုင်ကော်", latD: 19, latM: 40, lonD: 97, lonM: 13, corrM: -0, corrS: -52},
+            {region: "ကယားပြည်နယ်", name: "ဒီမောဆိုး", latD: 19, latM: 31, lonD: 97, lonM: 8, corrM: -1, corrS: -28},
+            {region: "ကယားပြည်နယ်", name: "ဘောလခဲ", latD: 19, latM: 11, lonD: 97, lonM: 20, corrM: -0, corrS: -40},
+            {region: "ကယားပြည်နယ်", name: "ဖားဆောင်း", latD: 18, latM: 48, lonD: 97, lonM: 12, corrM: -1, corrS: -12},
+            {region: "ကယားပြည်နယ်", name: "ရှားတော", latD: 18, latM: 46, lonD: 97, lonM: 40, corrM: 0, corrS: 40},
+            {region: "ကယားပြည်နယ်", name: "မယ်စဲ့", latD: 18, latM: 58, lonD: 97, lonM: 32, corrM: 0, corrS: 8},
+            {region: "ကယားပြည်နယ်", name: "ဖရူးဆို", latD: 19, latM: 17, lonD: 97, lonM: 0, corrM: -2, corrS: 0},
+            {region: "ကယားပြည်နယ်", name: "လွိုင်မော်", latD: 19, latM: 42, lonD: 97, lonM: 44, corrM: 0, corrS: 56},
+            {region: "ကယားပြည်နယ်", name: "မဲဆောက်", latD: 19, latM: 18, lonD: 97, lonM: 34, corrM: 0, corrS: 16},
+            {region: "ကယားပြည်နယ်", name: "ချီဖွေ", latD: 19, latM: 20, lonD: 97, lonM: 17, corrM: -0, corrS: -52},
+            {region: "ကယားပြည်နယ်", name: "ဆောက်ဖို့", latD: 19, latM: 8, lonD: 97, lonM: 2, corrM: -1, corrS: -52},
+            {region: "ကယားပြည်နယ်", name: "နန်းကြာဖန်", latD: 19, latM: 11, lonD: 97, lonM: 26, corrM: -0, corrS: -16},
+
+            // ကရင်ပြည်နယ် (၁၅ မြို့)
+            {region: "ကရင်ပြည်နယ်", name: "ဘားအံ", latD: 16, latM: 53, lonD: 97, lonM: 30, corrM: 0, corrS: 32},
+            {region: "ကရင်ပြည်နယ်", name: "မြဝတီ", latD: 16, latM: 7, lonD: 98, lonM: 31, corrM: 4, corrS: 4},
+            {region: "ကရင်ပြည်နယ်", name: "သံတောင်ကြီး", latD: 19, latM: 4, lonD: 96, lonM: 51, corrM: -2, corrS: -36},
+            {region: "ကရင်ပြည်နယ်", name: "ကော့ကရိတ်", latD: 16, latM: 27, lonD: 98, lonM: 7, corrM: 2, corrS: 28},
+            {region: "ကရင်ပြည်နယ်", name: "ဖာပွန်", latD: 18, latM: 49, lonD: 97, lonM: 26, corrM: -0, corrS: -16},
+            {region: "ကရင်ပြည်နယ်", name: "ကြာအင်း", latD: 16, latM: 34, lonD: 98, lonM: 8, corrM: 2, corrS: 32},
+            {region: "ကရင်ပြည်နယ်", name: "လှိုင်းဘွဲ့", latD: 17, latM: 20, lonD: 97, lonM: 36, corrM: 0, corrS: 24},
+            {region: "ကရင်ပြည်နယ်", name: "သံတောင်ဦး", latD: 18, latM: 57, lonD: 96, lonM: 48, corrM: -2, corrS: -48},
+            {region: "ကရင်ပြည်နယ်", name: "ဖိုက်ချောင်း", latD: 15, latM: 52, lonD: 98, lonM: 15, corrM: 3, corrS: 0},
+            {region: "ကရင်ပြည်နယ်", name: "ဂန့်ဂေါ", latD: 17, latM: 19, lonD: 97, lonM: 18, corrM: -0, corrS: -48},
+            {region: "ကရင်ပြည်နယ်", name: "ချောင်းဖျား", latD: 16, latM: 43, lonD: 98, lonM: 35, corrM: 4, corrS: 20},
+            {region: "ကရင်ပြည်နယ်", name: "ဝေါလိန်", latD: 16, latM: 41, lonD: 97, lonM: 54, corrM: 1, corrS: 36},
+            {region: "ကရင်ပြည်နယ်", name: "ကလိန်ဇီ", latD: 15, latM: 24, lonD: 98, lonM: 8, corrM: 2, corrS: 32},
+            {region: "ကရင်ပြည်နယ်", name: "သထုံ", latD: 16, latM: 41, lonD: 97, lonM: 36, corrM: 0, corrS: 24},
+            {region: "ကရင်ပြည်နယ်", name: "မုဒုံ", latD: 16, latM: 26, lonD: 97, lonM: 43, corrM: 0, corrS: 52},
+
+            // ချင်းပြည်နယ် (၁၈ မြို့)
+            {region: "ချင်းပြည်နယ်", name: "ဟားခါး", latD: 22, latM: 39, lonD: 93, lonM: 36, corrM: -14, corrS: -36},
+            {region: "ချင်းပြည်နယ်", name: "မတူပီ", latD: 21, latM: 36, lonD: 93, lonM: 27, corrM: -16, corrS: -12},
+            {region: "ချင်းပြည်နယ်", name: "ဖလမ်း", latD: 22, latM: 13, lonD: 93, lonM: 41, corrM: -14, corrS: -44},
+            {region: "ချင်းပြည်နယ်", name: "တီးတိန်", latD: 23, latM: 23, lonD: 93, lonM: 22, corrM: -16, corrS: -32},
+            {region: "ချင်းပြည်နယ်", name: "တွန်းဇံ", latD: 23, latM: 29, lonD: 93, lonM: 35, corrM: -15, corrS: -40},
+            {region: "ချင်းပြည်နယ်", name: "ကန်ပက်လက်", latD: 21, latM: 16, lonD: 94, lonM: 2, corrM: -13, corrS: -52},
+            {region: "ချင်းပြည်နယ်", name: "မင်းတပ်", latD: 21, latM: 33, lonD: 93, lonM: 54, corrM: -14, corrS: -24},
+            {region: "ချင်းပြည်နယ်", name: "မင်းတပ်ခွဲ", latD: 21, latM: 18, lonD: 93, lonM: 52, corrM: -14, corrS: -32},
+            {region: "ချင်းပြည်နယ်", name: "ပလက်ဝ", latD: 21, latM: 12, lonD: 92, lonM: 51, corrM: -18, corrS: -36},
+            {region: "ချင်းပြည်နယ်", name: "ရိပ်သာ", latD: 20, latM: 54, lonD: 93, lonM: 14, corrM: -17, corrS: -4},
+            {region: "ချင်းပြည်နယ်", name: "ထန်တလန်", latD: 22, latM: 16, lonD: 93, lonM: 37, corrM: -15, corrS: -32},
+            {region: "ချင်းပြည်နယ်", name: "ဆွေပေါင်", latD: 21, latM: 36, lonD: 93, lonM: 10, corrM: -17, corrS: -20},
+            {region: "ချင်းပြည်နယ်", name: "လုံဟေး", latD: 20, latM: 55, lonD: 93, lonM: 39, corrM: -15, corrS: -24},
+            {region: "ချင်းပြည်နယ်", name: "မီဇိုးရမ်", latD: 23, latM: 9, lonD: 93, lonM: 23, corrM: -16, corrS: -28},
+            {region: "ချင်းပြည်နယ်", name: "ကူကီးခေါင်", latD: 23, latM: 27, lonD: 93, lonM: 34, corrM: -15, corrS: -44},
+            {region: "ချင်းပြည်နယ်", name: "မတ်စကိတ်", latD: 21, latM: 31, lonD: 93, lonM: 28, corrM: -16, corrS: -8},
+            {region: "ချင်းပြည်နယ်", name: "ဆီးပွန်", latD: 22, latM: 6, lonD: 93, lonM: 41, corrM: -15, corrS: -16},
+            {region: "ချင်းပြည်နယ်", name: "ကင်းမြီးကောက်", latD: 21, latM: 10, lonD: 93, lonM: 54, corrM: -14, corrS: -24},
+
+            // စစ်ကိုင်းတိုင်း (၃၀ မြို့)
+            {region: "စစ်ကိုင်းတိုင်း", name: "စစ်ကိုင်း", latD: 21, latM: 52, lonD: 95, lonM: 59, corrM: -6, corrS: 4},
+            {region: "စစ်ကိုင်းတိုင်း", name: "မုံရွာ", latD: 22, latM: 8, lonD: 95, lonM: 8, corrM: -9, corrS: -28},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ရွှေဘို", latD: 22, latM: 35, lonD: 95, lonM: 42, corrM: -7, corrS: -12},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ကသာ", latD: 23, latM: 36, lonD: 96, lonM: 3, corrM: -5, corrS: -48},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ခန္တီး", latD: 25, latM: 22, lonD: 95, lonM: 44, corrM: -7, corrS: -4},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ကလေး", latD: 23, latM: 11, lonD: 94, lonM: 4, corrM: -13, corrS: -44},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ယင်းမာပင်", latD: 20, latM: 26, lonD: 94, lonM: 52, corrM: -10, corrS: -32},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ရွှေညောင်", latD: 22, latM: 35, lonD: 95, lonM: 18, corrM: -8, corrS: -48},
+            {region: "စစ်ကိုင်းတိုင်း", name: "အင်းတော်", latD: 23, latM: 59, lonD: 96, lonM: 13, corrM: -5, corrS: -8},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ဗန်းမောက်", latD: 24, latM: 12, lonD: 94, lonM: 52, corrM: -10, corrS: -32},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ကျွန်းလှ", latD: 23, latM: 35, lonD: 95, lonM: 42, corrM: -7, corrS: -12},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ဖောင်းပြင်", latD: 22, latM: 39, lonD: 95, lonM: 8, corrM: -9, corrS: -28},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ရေဦး", latD: 22, latM: 28, lonD: 95, lonM: 16, corrM: -8, corrS: -56},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ဝက်လက်", latD: 21, latM: 9, lonD: 95, lonM: 8, corrM: -9, corrS: -28},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ဒီပဲယင်း", latD: 22, latM: 6, lonD: 94, lonM: 54, corrM: -10, corrS: -24},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ပုလဲ", latD: 22, latM: 28, lonD: 95, lonM: 7, corrM: -9, corrS: -32},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ပင်လည်ဘူး", latD: 21, latM: 37, lonD: 95, lonM: 9, corrM: -9, corrS: -24},
+            {region: "စစ်ကိုင်းတိုင်း", name: "တန့်ဆည်", latD: 23, latM: 18, lonD: 95, lonM: 18, corrM: -8, corrS: -48},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ကနီ", latD: 23, latM: 46, lonD: 94, lonM: 34, corrM: -11, corrS: -44},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ခင်ဦး", latD: 22, latM: 42, lonD: 95, lonM: 38, corrM: -7, corrS: -28},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ဟုမ္မလင်း", latD: 24, latM: 53, lonD: 94, lonM: 55, corrM: -10, corrS: -20},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ပင်ဝဲ", latD: 21, latM: 48, lonD: 95, lonM: 59, corrM: -6, corrS: 4},
+            {region: "စစ်ကိုင်းတိုင်း", name: "လေရှီး", latD: 21, latM: 32, lonD: 95, lonM: 40, corrM: -7, corrS: -20},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ချောင်းဦး", latD: 21, latM: 56, lonD: 95, lonM: 39, corrM: -7, corrS: -24},
+            {region: "စစ်ကိုင်းတိုင်း", name: "မိုးကုတ်", latD: 23, latM: 6, lonD: 96, lonM: 21, corrM: -4, corrS: -36},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ငါန်းဇွန်", latD: 20, latM: 52, lonD: 95, lonM: 25, corrM: -8, corrS: -20},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ပခုက္ကူ", latD: 21, latM: 20, lonD: 94, lonM: 55, corrM: -10, corrS: -20},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ဆားလင်းကြီး", latD: 21, latM: 58, lonD: 95, lonM: 44, corrM: -7, corrS: -4},
+            {region: "စစ်ကိုင်းတိုင်း", name: "ရေစကြို", latD: 21, latM: 36, lonD: 95, lonM: 8, corrM: -9, corrS: -28},
+            {region: "စစ်ကိုင်းတိုင်း", name: "သီပေါ", latD: 22, latM: 34, lonD: 96, lonM: 28, corrM: -4, corrS: -8},
+
+            // တနင်္သာရီတိုင်း (၁၈ မြို့)
+            {region: "တနင်္သာရီတိုင်း", name: "ထားဝယ်", latD: 14, latM: 5, lonD: 98, lonM: 11, corrM: 2, corrS: 44},
+            {region: "တနင်္သာရီတိုင်း", name: "မြိတ်", latD: 12, latM: 26, lonD: 98, lonM: 36, corrM: 4, corrS: 24},
+            {region: "တနင်္သာရီတိုင်း", name: "ကော့သောင်း", latD: 9, latM: 59, lonD: 98, lonM: 33, corrM: 4, corrS: 12},
+            {region: "တနင်္သာရီတိုင်း", name: "သံလွင်", latD: 14, latM: 41, lonD: 98, lonM: 12, corrM: 2, corrS: 48},
+            {region: "တနင်္သာရီတိုင်း", name: "ရေး", latD: 15, latM: 22, lonD: 97, lonM: 43, corrM: 0, corrS: 52},
+            {region: "တနင်္သာရီတိုင်း", name: "လောင်းလုံ", latD: 9, latM: 57, lonD: 98, lonM: 46, corrM: 5, corrS: 4},
+            {region: "တနင်္သာရီတိုင်း", name: "ဘုတ်ပြင်း", latD: 11, latM: 16, lonD: 98, lonM: 46, corrM: 5, corrS: 4},
+            {region: "တနင်္သာရီတိုင်း", name: "ကလိ", latD: 13, latM: 40, lonD: 98, lonM: 41, corrM: 4, corrS: 44},
+            {region: "တနင်္သာရီတိုင်း", name: "ပုလော", latD: 13, latM: 50, lonD: 98, lonM: 30, corrM: 4, corrS: 0},
+            {region: "တနင်္သာရီတိုင်း", name: "တောင်ကြီး", latD: 13, latM: 15, lonD: 98, lonM: 31, corrM: 4, corrS: 4},
+            {region: "တနင်္သာရီတိုင်း", name: "ဘုရားသုံးဆူ", latD: 15, latM: 20, lonD: 98, lonM: 25, corrM: 3, corrS: 40},
+            {region: "တနင်္သာရီတိုင်း", name: "ချောင်းဆုံ", latD: 14, latM: 9, lonD: 98, lonM: 12, corrM: 2, corrS: 48},
+            {region: "တနင်္သာရီတိုင်း", name: "သရက်ချောင်း", latD: 14, latM: 3, lonD: 98, lonM: 15, corrM: 3, corrS: 0},
+            {region: "တနင်္သာရီတိုင်း", name: "ပေါင်း", latD: 13, latM: 49, lonD: 98, lonM: 9, corrM: 2, corrS: 36},
+            {region: "တနင်္သာရီတိုင်း", name: "လှိုင်းမ", latD: 14, latM: 6, lonD: 98, lonM: 9, corrM: 2, corrS: 36},
+            {region: "တနင်္သာရီတိုင်း", name: "ကျွန်းစု", latD: 10, latM: 25, lonD: 98, lonM: 33, corrM: 4, corrS: 12},
+            {region: "တနင်္သာရီတိုင်း", name: "တံတားဦး", latD: 14, latM: 6, lonD: 98, lonM: 6, corrM: 2, corrS: 24},
+            {region: "တနင်္သာရီတိုင်း", name: "ပန်းဆိုး", latD: 13, latM: 57, lonD: 98, lonM: 15, corrM: 3, corrS: 0},
+
+            // ပဲခူးတိုင်း (၂၀ မြို့)
+            {region: "ပဲခူးတိုင်း", name: "ပဲခူး", latD: 17, latM: 19, lonD: 96, lonM: 29, corrM: -4, corrS: 4},
+            {region: "ပဲခူးတိုင်း", name: "တောင်ငူ", latD: 18, latM: 56, lonD: 96, lonM: 26, corrM: -4, corrS: -16},
+            {region: "ပဲခူးတိုင်း", name: "သာယာဝတီ", latD: 17, latM: 38, lonD: 95, lonM: 49, corrM: -6, corrS: -44},
+            {region: "ပဲခူးတိုင်း", name: "ပြည်", latD: 18, latM: 49, lonD: 95, lonM: 13, corrM: -9, corrS: -8},
+            {region: "ပဲခူးတိုင်း", name: "ကြို့ပင်ကောက်", latD: 17, latM: 26, lonD: 95, lonM: 53, corrM: -6, corrS: -28},
+            {region: "ပဲခူးတိုင်း", name: "ညောင်လေးပင် ", latD: 17, latM: 39, lonD: 96, lonM: 43, corrM: -3, corrS: 8},
+            {region: "ပဲခူးတိုင်း", name: "ရွှေကျင်", latD: 18, latM: 26, lonD: 96, lonM: 26, corrM: -4, corrS: -16},
+            {region: "ပဲခူးတိုင်း", name: "ဒိုက်ဦး", latD: 17, latM: 52, lonD: 96, lonM: 34, corrM: -3, corrS: 44},
+            {region: "ပဲခူးတိုင်း", name: "အုတ်ဖို", latD: 17, latM: 53, lonD: 96, lonM: 33, corrM: -3, corrS: 48},
+            {region: "ပဲခူးတိုင်း", name: "ကဝ", latD: 17, latM: 22, lonD: 96, lonM: 39, corrM: -3, corrS: 24},
+            {region: "ပဲခူးတိုင်း", name: "ဖြူး", latD: 18, latM: 1, lonD: 96, lonM: 27, corrM: -4, corrS: -12},
+            {region: "ပဲခူးတိုင်း", name: "ရွှေတောင်", latD: 18, latM: 29, lonD: 96, lonM: 24, corrM: -4, corrS: -24},
+            {region: "ပဲခူးတိုင်း", name: "ဇီးကုန်း", latD: 17, latM: 36, lonD: 95, lonM: 59, corrM: -6, corrS: 4},
+            {region: "ပဲခူးတိုင်း", name: "သနပ်ပင် ", latD: 17, latM: 19, lonD: 96, lonM: 42, corrM: -3, corrS: 12},
+            {region: "ပဲခူးတိုင်း", name: "အောင်လံ", latD: 19, latM: 0, lonD: 95, lonM: 39, corrM: -7, corrS: -24},
+            {region: "ပဲခူးတိုင်း", name: "နတ်တလင်း", latD: 20, latM: 28, lonD: 95, lonM: 23, corrM: -8, corrS: -28},
+            {region: "ပဲခူးတိုင်း", name: "မင်းလှ", latD: 17, latM: 57, lonD: 95, lonM: 30, corrM: -8, corrS: 0},
+            {region: "ပဲခူးတိုင်း", name: "ပန်းတောင်း", latD: 18, latM: 4, lonD: 95, lonM: 29, corrM: -8, corrS: -4},
+            {region: "ပဲခူးတိုင်း", name: "ကျောက်တံခါး", latD: 18, latM: 23, lonD: 96, lonM: 31, corrM: -3, corrS: 56},
+            {region: "ပဲခူးတိုင်း", name: "ရွာငံ", latD: 18, latM: 46, lonD: 96, lonM: 25, corrM: -4, corrS: -20},
+
+            // မကွေးတိုင်း (၂၂ မြို့)
+            {region: "မကွေးတိုင်း", name: "မကွေး", latD: 20, latM: 9, lonD: 94, lonM: 55, corrM: -10, corrS: -20},
+            {region: "မကွေးတိုင်း", name: "ချောက်", latD: 20, latM: 54, lonD: 94, lonM: 50, corrM: -10, corrS: -44},
+            {region: "မကွေးတိုင်း", name: "မင်းဘူး", latD: 20, latM: 11, lonD: 94, lonM: 53, corrM: -10, corrS: -28},
+            {region: "မကွေးတိုင်း", name: "ဂန့်ဂေါ", latD: 22, latM: 10, lonD: 94, lonM: 8, corrM: -13, corrS: -28},
+            {region: "မကွေးတိုင်း", name: "တောင်တွင်းကြီး", latD: 19, latM: 58, lonD: 95, lonM: 13, corrM: -9, corrS: -8},
+            {region: "မကွေးတိုင်း", name: "ရေနံချောင်း", latD: 20, latM: 28, lonD: 94, lonM: 52, corrM: -10, corrS: -32},
+            {region: "မကွေးတိုင်း", name: "စလင်း", latD: 20, latM: 39, lonD: 94, lonM: 44, corrM: -11, corrS: -4},
+            {region: "မကွေးတိုင်း", name: "ငဖဲ", latD: 20, latM: 42, lonD: 94, lonM: 41, corrM: -11, corrS: -16},
+            {region: "မကွေးတိုင်း", name: "ဆိပ်ဖြူ", latD: 20, latM: 29, lonD: 94, lonM: 43, corrM: -11, corrS: -8},
+            {region: "မကွေးတိုင်း", name: "ပခုက္ကူ", latD: 21, latM: 20, lonD: 94, lonM: 55, corrM: -10, corrS: -20},
+            {region: "မကွေးတိုင်း", name: "သရက်", latD: 19, latM: 19, lonD: 95, lonM: 13, corrM: -9, corrS: -8},
+            {region: "မကွေးတိုင်း", name: "ရမည်းသင်း", latD: 19, latM: 45, lonD: 96, lonM: 5, corrM: -5, corrS: -40},
+            {region: "မကွေးတိုင်း", name: "နတ်မောက်", latD: 20, latM: 37, lonD: 94, lonM: 14, corrM: -13, corrS: -4},
+            {region: "မကွေးတိုင်း", name: "မြိုင်ကလေး", latD: 21, latM: 13, lonD: 95, lonM: 23, corrM: -8, corrS: -28},
+            {region: "မကွေးတိုင်း", name: "သံတောင်ကြီး", latD: 19, latM: 4, lonD: 96, lonM: 51, corrM: -2, corrS: -36},
+            {region: "မကွေးတိုင်း", name: "ပေါက်ခေါင်း", latD: 20, latM: 49, lonD: 94, lonM: 49, corrM: -10, corrS: -44},
+            {region: "မကွေးတိုင်း", name: "ဇေယျဝတီ", latD: 20, latM: 34, lonD: 94, lonM: 32, corrM: -11, corrS: -52},
+            {region: "မကွေးတိုင်း", name: "ဆင်ပေါင်ဝဲ", latD: 20, latM: 10, lonD: 94, lonM: 34, corrM: -11, corrS: -44},
+            {region: "မကွေးတိုင်း", name: "ကံမထူးသော", latD: 19, latM: 56, lonD: 94, lonM: 36, corrM: -11, corrS: -36},
+            {region: "မကွေးတိုင်း", name: "ကျောက်ပန်းတောင်း", latD: 20, latM: 50, lonD: 95, lonM: 7, corrM: -9, corrS: -32},
+            {region: "မကွေးတိုင်း", name: "မိုးကောင်း", latD: 23, latM: 6, lonD: 94, lonM: 18, corrM: -12, corrS: -48},
+            {region: "မကွေးတိုင်း", name: "မြို့သစ်ကြီး", latD: 20, latM: 52, lonD: 95, lonM: 25, corrM: -8, corrS: -20},
+
+            // မန္တလေးတိုင်း (၂၅ မြို့)
+            {region: "မန္တလေးတိုင်း", name: "မန္တလေး", latD: 21, latM: 56, lonD: 96, lonM: 6, corrM: -5, corrS: -36},
+            {region: "မန္တလေးတိုင်း", name: "ပြင်ဦးလွင်", latD: 22, latM: 2, lonD: 96, lonM: 27, corrM: -4, corrS: -12},
+            {region: "မန္တလေးတိုင်း", name: "စဉ့်ကူး", latD: 22, latM: 34, lonD: 95, lonM: 59, corrM: -6, corrS: 4},
+            {region: "မန္တလေးတိုင်း", name: "ကျောက်ဆည်", latD: 21, latM: 36, lonD: 96, lonM: 8, corrM: -5, corrS: -28},
+            {region: "မန္တလေးတိုင်း", name: "ညောင်ဦး", latD: 21, latM: 12, lonD: 94, lonM: 55, corrM: -10, corrS: -20},
+            {region: "မန္တလေးတိုင်း", name: "မိတ္ထီလာ", latD: 20, latM: 52, lonD: 95, lonM: 59, corrM: -6, corrS: 4},
+            {region: "မန္တလေးတိုင်း", name: "အောင်မြေသာဇံ", latD: 21, latM: 59, lonD: 96, lonM: 7, corrM: -5, corrS: -32},
+            {region: "မန္တလေးတိုင်း", name: "အမရပူရ", latD: 21, latM: 54, lonD: 96, lonM: 3, corrM: -5, corrS: -48},
+            {region: "မန္တလေးတိုင်း", name: "ပုဂံ", latD: 21, latM: 10, lonD: 94, lonM: 52, corrM: -10, corrS: -32},
+            {region: "မန္တလေးတိုင်း", name: "မတ္တရာ", latD: 21, latM: 32, lonD: 96, lonM: 5, corrM: -5, corrS: -40},
+            {region: "မန္တလေးတိုင်း", name: "အုတ်တွင်း", latD: 21, latM: 13, lonD: 95, lonM: 52, corrM: -6, corrS: -32},
+            {region: "မန္တလေးတိုင်း", name: "ညောင်ရွှေ", latD: 21, latM: 35, lonD: 95, lonM: 59, corrM: -6, corrS: 4},
+            {region: "မန္တလေးတိုင်း", name: "တပ်ကုန်း", latD: 21, latM: 53, lonD: 95, lonM: 52, corrM: -6, corrS: -32},
+            {region: "မန္တလေးတိုင်း", name: "စဉ့်ကြီး", latD: 21, latM: 42, lonD: 96, lonM: 7, corrM: -5, corrS: -32},
+            {region: "မန္တလေးတိုင်း", name: "မြစ်သား", latD: 22, latM: 7, lonD: 96, lonM: 6, corrM: -5, corrS: -36},
+            {region: "မန္တလေးတိုင်း", name: "ပုပွဲ", latD: 22, latM: 16, lonD: 96, lonM: 22, corrM: -4, corrS: -32},
+            {region: "မန္တလေးတိုင်း", name: "သပိတ်ကျင်း", latD: 21, latM: 36, lonD: 96, lonM: 9, corrM: -5, corrS: -24},
+            {region: "မန္တလေးတိုင်း", name: "နွားထိုးကြီး", latD: 21, latM: 41, lonD: 95, lonM: 58, corrM: -6, corrS: 8},
+            {region: "မန္တလေးတိုင်း", name: "ဆိပ်ကမ်း", latD: 21, latM: 43, lonD: 95, lonM: 59, corrM: -6, corrS: 4},
+            {region: "မန္တလေးတိုင်း", name: "တောင်သာ", latD: 21, latM: 12, lonD: 95, lonM: 23, corrM: -8, corrS: -28},
+            {region: "မန္တလေးတိုင်း", name: "ပင်လောင်း", latD: 21, latM: 39, lonD: 96, lonM: 10, corrM: -5, corrS: -20},
+            {region: "မန္တလေးတိုင်း", name: "ရေတာရှည်", latD: 21, latM: 59, lonD: 95, lonM: 59, corrM: -6, corrS: 4},
+            {region: "မန္တလေးတိုင်း", name: "အုန်းပင်စမ်း", latD: 22, latM: 4, lonD: 96, lonM: 3, corrM: -5, corrS: -48},
+            {region: "မန္တလေးတိုင်း", name: "ပင်မ", latD: 21, latM: 43, lonD: 95, lonM: 52, corrM: -6, corrS: -32},
+            {region: "မန္တလေးတိုင်း", name: "သီဟိုဠ်", latD: 21, latM: 18, lonD: 96, lonM: 13, corrM: -5, corrS: -8},
+
+            // မွန်ပြည်နယ် (၁၅ မြို့)
+            {region: "မွန်ပြည်နယ်", name: "မော်လမြိုင်", latD: 16, latM: 29, lonD: 97, lonM: 37, corrM: 0, corrS: 28},
+            {region: "မွန်ပြည်နယ်", name: "သထုံ", latD: 16, latM: 41, lonD: 97, lonM: 36, corrM: 0, corrS: 24},
+            {region: "မွန်ပြည်နယ်", name: "ကျိုက်ထို", latD: 16, latM: 47, lonD: 97, lonM: 34, corrM: 0, corrS: 16},
+            {region: "မွန်ပြည်နယ်", name: "ဘီးလင်း", latD: 15, latM: 11, lonD: 98, lonM: 27, corrM: 3, corrS: 48},
+            {region: "မွန်ပြည်နယ်", name: "ရေး", latD: 15, latM: 22, lonD: 97, lonM: 43, corrM: 0, corrS: 52},
+            {region: "မွန်ပြည်နယ်", name: "ကျိုက္ကဆံ", latD: 15, latM: 59, lonD: 97, lonM: 46, corrM: 1, corrS: 4},
+            {region: "မွန်ပြည်နယ်", name: "ချောင်းဆုံ", latD: 16, latM: 36, lonD: 97, lonM: 42, corrM: 0, corrS: 48},
+            {region: "မွန်ပြည်နယ်", name: "မုဒုံ", latD: 16, latM: 26, lonD: 97, lonM: 43, corrM: 0, corrS: 52},
+            {region: "မွန်ပြည်နယ်", name: "သံဖြူဇရပ်", latD: 17, latM: 18, lonD: 97, lonM: 2, corrM: -1, corrS: -52},
+            {region: "မွန်ပြည်နယ်", name: "ကြာအင်း", latD: 16, latM: 34, lonD: 98, lonM: 8, corrM: 2, corrS: 32},
+            {region: "မွန်ပြည်နယ်", name: "ကျိုက်မရော", latD: 16, latM: 28, lonD: 97, lonM: 34, corrM: 0, corrS: 16},
+            {region: "မွန်ပြည်နယ်", name: "သလက်", latD: 15, latM: 13, lonD: 97, lonM: 51, corrM: 1, corrS: 24},
+            {region: "မွန်ပြည်နယ်", name: "ဘန့်ဘွေးကျွန်း", latD: 15, latM: 14, lonD: 97, lonM: 52, corrM: 1, corrS: 28},
+            {region: "မွန်ပြည်နယ်", name: "ဇင်းကျိုက်", latD: 15, latM: 30, lonD: 97, lonM: 46, corrM: 1, corrS: 4},
+            {region: "မွန်ပြည်နယ်", name: "ကော့သောင်း", latD: 9, latM: 59, lonD: 98, lonM: 33, corrM: 4, corrS: 12},
+
+            // ရှမ်းပြည်နယ် (၂၅ မြို့)
+            {region: "ရှမ်းပြည်နယ်", name: "တောင်ကြီး", latD: 20, latM: 47, lonD: 97, lonM: 2, corrM: -1, corrS: -52},
+            {region: "ရှမ်းပြည်နယ်", name: "လင်းခေး", latD: 20, latM: 58, lonD: 97, lonM: 45, corrM: 1, corrS: 0},
+            {region: "ရှမ်းပြည်နယ်", name: "လွိုင်လင်", latD: 20, latM: 59, lonD: 97, lonM: 52, corrM: 1, corrS: 28},
+            {region: "ရှမ်းပြည်နယ်", name: "လားရှိုး", latD: 22, latM: 57, lonD: 97, lonM: 45, corrM: 1, corrS: 0},
+            {region: "ရှမ်းပြည်နယ်", name: "ကျောက်မဲ", latD: 23, latM: 12, lonD: 96, lonM: 42, corrM: -3, corrS: 12},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုးကုတ်", latD: 23, latM: 6, lonD: 96, lonM: 21, corrM: -4, corrS: -36},
+            {region: "ရှမ်းပြည်နယ်", name: "ကျေးသီး", latD: 20, latM: 40, lonD: 97, lonM: 54, corrM: 1, corrS: 36},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းဆတ်", latD: 20, latM: 32, lonD: 99, lonM: 16, corrM: 7, corrS: 4},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းပြင်း", latD: 20, latM: 25, lonD: 98, lonM: 31, corrM: 4, corrS: 4},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းရှူး", latD: 20, latM: 28, lonD: 98, lonM: 51, corrM: 5, corrS: 24},
+            {region: "ရှမ်းပြည်နယ်", name: "နမ့်ဆန်", latD: 20, latM: 52, lonD: 97, lonM: 44, corrM: 0, corrS: 56},
+            {region: "ရှမ်းပြည်နယ်", name: "ကွတ်ခိုင်", latD: 23, latM: 10, lonD: 96, lonM: 40, corrM: -3, corrS: 20},
+            {region: "ရှမ်းပြည်နယ်", name: "သီပေါ", latD: 22, latM: 34, lonD: 96, lonM: 28, corrM: -4, corrS: -8},
+            {region: "ရှမ်းပြည်နယ်", name: "နမ္မတူ", latD: 22, latM: 57, lonD: 97, lonM: 24, corrM: -0, corrS: -24},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းမော", latD: 23, latM: 5, lonD: 97, lonM: 12, corrM: -1, corrS: -12},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းကိုင်", latD: 21, latM: 38, lonD: 99, lonM: 2, corrM: 6, corrS: 8},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းရယ်", latD: 22, latM: 2, lonD: 98, lonM: 26, corrM: 3, corrS: 44},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းခမ်း", latD: 20, latM: 11, lonD: 98, lonM: 55, corrM: 5, corrS: 40},
+            {region: "ရှမ်းပြည်နယ်", name: "တာချီလိတ်", latD: 20, latM: 27, lonD: 99, lonM: 53, corrM: 9, corrS: 32},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းဖြတ်", latD: 20, latM: 20, lonD: 98, lonM: 57, corrM: 5, corrS: 48},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းတုံ", latD: 20, latM: 19, lonD: 98, lonM: 55, corrM: 5, corrS: 40},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းပန်", latD: 20, latM: 16, lonD: 98, lonM: 43, corrM: 4, corrS: 52},
+            {region: "ရှမ်းပြည်နယ်", name: "နမ့်ခမ်း", latD: 22, latM: 10, lonD: 97, lonM: 25, corrM: -0, corrS: -20},
+            {region: "ရှမ်းပြည်နယ်", name: "လဲချား", latD: 20, latM: 10, lonD: 98, lonM: 45, corrM: 5, corrS: 0},
+            {region: "ရှမ်းပြည်နယ်", name: "မိုင်းလား", latD: 22, latM: 32, lonD: 97, lonM: 57, corrM: 1, corrS: 48},
+
+            // ရန်ကုန်တိုင်း (၃၀ မြို့)
+            {region: "ရန်ကုန်တိုင်း", name: "ဆူးလေ", latD: 16, latM: 46, lonD: 96, lonM: 10, corrM: -5, corrS: -20},
+            {region: "ရန်ကုန်တိုင်း", name: "လှိုင်", latD: 16, latM: 53, lonD: 96, lonM: 9, corrM: -5, corrS: -24},
+            {region: "ရန်ကုန်တိုင်း", name: "မင်္ဂလာဒုံ", latD: 16, latM: 54, lonD: 96, lonM: 8, corrM: -5, corrS: -28},
+            {region: "ရန်ကုန်တိုင်း", name: "သန်လျင်", latD: 16, latM: 46, lonD: 96, lonM: 15, corrM: -5, corrS: -0},
+            {region: "ရန်ကုန်တိုင်း", name: "ကျောက်တန်း", latD: 16, latM: 52, lonD: 96, lonM: 10, corrM: -5, corrS: -20},
+            {region: "ရန်ကုန်တိုင်း", name: "ဒဂုံ", latD: 16, latM: 47, lonD: 96, lonM: 8, corrM: -5, corrS: -28},
+            {region: "ရန်ကုန်တိုင်း", name: "မရမ်းကုန်း", latD: 16, latM: 51, lonD: 96, lonM: 6, corrM: -5, corrS: -36},
+            {region: "ရန်ကုန်တိုင်း", name: "ဗဟန်း", latD: 16, latM: 48, lonD: 96, lonM: 9, corrM: -5, corrS: -24},
+            {region: "ရန်ကုန်တိုင်း", name: "ကမာရွတ်", latD: 16, latM: 49, lonD: 96, lonM: 8, corrM: -5, corrS: -28},
+            {region: "ရန်ကုန်တိုင်း", name: "တာမွေ", latD: 16, latM: 47, lonD: 96, lonM: 9, corrM: -5, corrS: -24},
+            {region: "ရန်ကုန်တိုင်း", name: "စမ်းချောင်း", latD: 16, latM: 47, lonD: 96, lonM: 8, corrM: -5, corrS: -28},
+            {region: "ရန်ကုန်တိုင်း", name: "ဒေါပုံ", latD: 16, latM: 47, lonD: 96, lonM: 10, corrM: -5, corrS: -20},
+            {region: "ရန်ကုန်တိုင်း", name: "ပန်းဘဲတန်း", latD: 16, latM: 50, lonD: 96, lonM: 9, corrM: -5, corrS: -24},
+            {region: "ရန်ကုန်တိုင်း", name: "မြောက်ဥက္ကလာပ", latD: 16, latM: 55, lonD: 96, lonM: 8, corrM: -5, corrS: -28},
+            {region: "ရန်ကုန်တိုင်း", name: "ဒဂုံဆိပ်ကမ်း", latD: 16, latM: 46, lonD: 96, lonM: 9, corrM: -5, corrS: -24},
+            {region: "ရန်ကုန်တိုင်း", name: "တွံတေး", latD: 16, latM: 44, lonD: 96, lonM: 6, corrM: -5, corrS: -36},
+            {region: "ရန်ကုန်တိုင်း", name: "ကိုကိုးကျွန်း", latD: 16, latM: 30, lonD: 96, lonM: 10, corrM: -5, corrS: -20},
+            {region: "ရန်ကုန်တိုင်း", name: "ကြည့်မြင်တိုင်", latD: 16, latM: 48, lonD: 96, lonM: 7, corrM: -5, corrS: -32},
+            {region: "ရန်ကုန်တိုင်း", name: "လမ်းမတော်", latD: 16, latM: 47, lonD: 96, lonM: 9, corrM: -5, corrS: -24},
+            {region: "ရန်ကုန်တိုင်း", name: "လသာ", latD: 16, latM: 48, lonD: 96, lonM: 8, corrM: -5, corrS: -28},
+            {region: "ရန်ကုန်တိုင်း", name: "အလုံ", latD: 16, latM: 49, lonD: 96, lonM: 7, corrM: -5, corrS: -32},
+            {region: "ရန်ကုန်တိုင်း", name: "ပုဇွန်တောင်", latD: 16, latM: 47, lonD: 96, lonM: 10, corrM: -5, corrS: -20},
+            {region: "ရန်ကုန်တိုင်း", name: "ဗိုလ်တထောင်", latD: 16, latM: 47, lonD: 96, lonM: 9, corrM: -5, corrS: -24},
+            {region: "ရန်ကုန်တိုင်း", name: "ဒလ", latD: 16, latM: 46, lonD: 96, lonM: 11, corrM: -5, corrS: -16},
+            {region: "ရန်ကုန်တိုင်း", name: "သာကေတ", latD: 16, latM: 50, lonD: 96, lonM: 8, corrM: -5, corrS: -28},
+            {region: "ရန်ကုန်တိုင်း", name: "မင်္ဂလာတောင်ညွန့်", latD: 16, latM: 51, lonD: 96, lonM: 7, corrM: -5, corrS: -32},
+            {region: "ရန်ကုန်တိုင်း", name: "ရွှေပြည်သာ", latD: 16, latM: 54, lonD: 96, lonM: 7, corrM: -5, corrS: -32},
+            {region: "ရန်ကုန်တိုင်း", name: "အင်းစိန်", latD: 16, latM: 52, lonD: 96, lonM: 6, corrM: -5, corrS: -36},
+            {region: "ရန်ကုန်တိုင်း", name: "သင်္ဃန်းကျွန်း", latD: 16, latM: 49, lonD: 96, lonM: 8, corrM: -5, corrS: -28},
+            {region: "ရန်ကုန်တိုင်း", name: "ကြည့်မြင်တိုင်(မြောက်ပိုင်း)", latD: 16, latM: 49, lonD: 96, lonM: 6, corrM: -5, corrS: -36},
+
+            // ဧရာဝတီတိုင်း (၂၀ မြို့)
+            {region: "ဧရာဝတီတိုင်း", name: "မော်လမြိုင်ကျွန်း", latD: 16, latM: 23, lonD: 95, lonM: 13, corrM: -9, corrS: -8},
+            {region: "ဧရာဝတီတိုင်း", name: "ပုသိမ်", latD: 16, latM: 46, lonD: 94, lonM: 47, corrM: -10, corrS: -52},
+            {region: "ဧရာဝတီတိုင်း", name: "ဟင်္သာတ", latD: 17, latM: 38, lonD: 95, lonM: 27, corrM: -8, corrS: -12},
+            {region: "ဧရာဝတီတိုင်း", name: "မြောင်းမြ", latD: 16, latM: 32, lonD: 95, lonM: 10, corrM: -9, corrS: -20},
+            {region: "ဧရာဝတီတိုင်း", name: "မအူပင်", latD: 16, latM: 44, lonD: 95, lonM: 39, corrM: -7, corrS: -24},
+            {region: "ဧရာဝတီတိုင်း", name: "ကျောင်းကုန်း", latD: 16, latM: 41, lonD: 95, lonM: 28, corrM: -8, corrS: -8},
+            {region: "ဧရာဝတီတိုင်း", name: "ဖျာပုံ", latD: 16, latM: 17, lonD: 96, lonM: 2, corrM: -5, corrS: -52},
+            {region: "ဧရာဝတီတိုင်း", name: "ညောင်တုန်း", latD: 17, latM: 24, lonD: 95, lonM: 25, corrM: -8, corrS: -20},
+            {region: "ဧရာဝတီတိုင်း", name: "ဒေးဒရဲ", latD: 16, latM: 50, lonD: 95, lonM: 30, corrM: -8, corrS: 0},
+            {region: "ဧရာဝတီတိုင်း", name: "ကန်ကြီးထောင့်", latD: 16, latM: 45, lonD: 95, lonM: 43, corrM: -7, corrS: -8},
+            {region: "ဧရာဝတီတိုင်း", name: "လပ္ပတ္တာ", latD: 16, latM: 41, lonD: 95, lonM: 40, corrM: -7, corrS: -20},
+            {region: "ဧရာဝတီတိုင်း", name: "သာပေါင်း", latD: 17, latM: 16, lonD: 95, lonM: 32, corrM: -7, corrS: -52},
+            {region: "ဧရာဝတီတိုင်း", name: "အင်္ဂပူ", latD: 17, latM: 40, lonD: 95, lonM: 22, corrM: -8, corrS: -32},
+            {region: "ဧရာဝတီတိုင်း", name: "ဇလွန်", latD: 17, latM: 24, lonD: 95, lonM: 38, corrM: -7, corrS: -28},
+            {region: "ဧရာဝတီတိုင်း", name: "ကျိုက်လတ်", latD: 17, latM: 0, lonD: 95, lonM: 33, corrM: -7, corrS: -48},
+            {region: "ဧရာဝတီတိုင်း", name: "ဝါးခယ်မ", latD: 17, latM: 20, lonD: 95, lonM: 29, corrM: -8, corrS: -4},
+            {region: "ဧရာဝတီတိုင်း", name: "ပန်းတနော်", latD: 16, latM: 52, lonD: 95, lonM: 33, corrM: -7, corrS: -48},
+            {region: "ဧရာဝတီတိုင်း", name: "ဘိုကလေး", latD: 16, latM: 57, lonD: 95, lonM: 21, corrM: -8, corrS: -36},
+            {region: "ဧရာဝတီတိုင်း", name: "ငပုတော", latD: 16, latM: 31, lonD: 94, lonM: 44, corrM: -11, corrS: -4},
+            {region: "ဧရာဝတီတိုင်း", name: "သုံးခွ", latD: 17, latM: 22, lonD: 95, lonM: 39, corrM: -7, corrS: -24}
+        ];
+
+        // စုစုပေါင်းမြို့အရေအတွက်
+        const totalCities = cityData.length;
+        document.querySelector('.city-count').innerHTML = `စုစုပေါင်း: ${totalCities} မြို့`;
+
+        // Functions for Calculator
+        const tableBody = document.getElementById('tableBody');
+        const searchInput = document.getElementById('searchInput');
+        const regionFilter = document.getElementById('regionFilter');
+        let selectedCity = null;
+
+        // လက်ရှိအချိန်ကိုပြသခြင်း
+        function updateCurrentTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('currentMST').innerText = `(လက်ရှိ: ${hours}:${minutes})`;
+            
+            // MST input ကိုလည်း update လုပ်မယ်
+            document.getElementById('mstTime').value = `${hours}:${minutes}`;
+            
+            // ရွေးထားတဲ့မြို့ရှိရင် LMT တွက်မယ်
+            if (selectedCity) {
+                calculateLMT();
+            }
+        }
+
+        // စာရင်းဇယားကိုဖော်ပြခြင်း
+        function renderTable(data) {
+            tableBody.innerHTML = '';
+            data.forEach(city => {
+                const row = document.createElement('tr');
+                const correctionSign = city.corrM >= 0 ? '+' : '-';
+                const absCorrM = Math.abs(city.corrM);
+                const absCorrS = Math.abs(city.corrS);
+                
+                row.innerHTML = `
+                    <td><strong>${city.name}</strong></td>
+                    <td>${city.region}</td>
+                    <td>${correctionSign}${absCorrM}:${absCorrS.toString().padStart(2, '0')}</td>
+                    <td>${city.latD}°${city.latM}' ${city.lonD}°${city.lonM}'</td>
+                `;
+                
+                row.onclick = () => {
+                    // ယခင်ရွေးထားတဲ့ row ကို ဖယ်ရှား
+                    document.querySelectorAll('tr.selected').forEach(r => r.classList.remove('selected'));
+                    // လက်ရှိ row ကို ရွေးမှတ်
+                    row.classList.add('selected');
+                    
+                    selectedCity = city;
+                    document.getElementById('selectedCityName').innerText = city.name;
+                    document.getElementById('selectedCityRegion').innerText = city.region;
+                    
+                    const correctionSign = city.corrM >= 0 ? '+' : '-';
+                    const absCorrM = Math.abs(city.corrM);
+                    const absCorrS = Math.abs(city.corrS);
+                    document.getElementById('correctionValue').innerText = `${correctionSign}${absCorrM}:${absCorrS.toString().padStart(2, '0')}`;
+                    
+                    document.getElementById('currentSelection').innerHTML = `ရွေးချယ်ထားသောမြို့: <strong>${city.name}</strong> (${city.region})`;
+                    
+                    calculateLMT();
+                };
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // LMT တွက်ချက်ခြင်း
+        function calculateLMT() {
+            if (!selectedCity) {
+                document.getElementById('lmtResult').innerText = '--:--:--';
+                document.getElementById('calculationDetails').innerHTML = 'မြို့တစ်ခုကို ရွေးချယ်ပါ။';
+                return;
+            }
+
+            const mst = document.getElementById('mstTime').value;
+            let [h, m] = mst.split(':').map(Number);
+            
+            // MST ကို စက္ကန့်ဖြင့်ပြောင်းခြင်း
+            let totalMSTSeconds = (h * 3600) + (m * 60);
+            
+            // ညှိကိန်းကို စက္ကန့်ဖြင့်တွက်ခြင်း
+            let correctionSeconds = (selectedCity.corrM * 60) + selectedCity.corrS;
+            
+            // LMT တွက်ချက်ခြင်း
+            let totalLMTSec = totalMSTSeconds + correctionSeconds;
+            
+            // 24 နာရီထက်ကျော်လျှင် သို့မဟုတ် အနုတ်ဖြစ်လျှင် ပြန်ညှိခြင်း
+            if (totalLMTSec >= 24 * 3600) {
+                totalLMTSec -= 24 * 3600;
+            } else if (totalLMTSec < 0) {
+                totalLMTSec += 24 * 3600;
+            }
+            
+            let resH = Math.floor(totalLMTSec / 3600);
+            let resM = Math.floor((totalLMTSec % 3600) / 60);
+            let resS = Math.floor(totalLMTSec % 60);
+            
+            document.getElementById('lmtResult').innerText = 
+                `${resH.toString().padStart(2,'0')}:${resM.toString().padStart(2,'0')}:${resS.toString().padStart(2,'0')}`;
+            
+            // တွက်ချက်မှုအသေးစိတ်ကို ပြသခြင်း
+            const correctionSign = selectedCity.corrM >= 0 ? '+' : '-';
+            const absCorrM = Math.abs(selectedCity.corrM);
+            const absCorrS = Math.abs(selectedCity.corrS);
+            
+            const details = `
+                <div>MST: ${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}</div>
+                <div>ညှိကိန်း: ${correctionSign}${absCorrM}မိနစ် ${absCorrS}စက္ကန့်</div>
+                <div>LMT = MST ${correctionSign} (${absCorrM}:${absCorrS.toString().padStart(2,'0')})</div>
+            `;
+            document.getElementById('calculationDetails').innerHTML = details;
+        }
+
+        // ရှာဖွေခြင်း
+        searchInput.oninput = () => {
+            const val = searchInput.value.toLowerCase();
+            const filtered = cityData.filter(c => 
+                c.name.toLowerCase().includes(val) || 
+                c.region.toLowerCase().includes(val)
+            );
+            renderTable(filtered);
+        };
+
+        // ဒေသစစ်ထုတ်ခြင်း
+        regionFilter.addEventListener('click', (e) => {
+            if (e.target.classList.contains('region-btn')) {
+                // active class ကိုဖယ်ရှား
+                document.querySelectorAll('.region-btn').forEach(btn => btn.classList.remove('active'));
+                // နှိပ်ထားသော button ကို active လုပ်မယ်
+                e.target.classList.add('active');
+                
+                const region = e.target.getAttribute('data-region');
+                if (region === 'all') {
+                    renderTable(cityData);
+                } else {
+                    const filtered = cityData.filter(c => c.region === region);
+                    renderTable(filtered);
+                }
+            }
+        });
+
+        // တွက်ချက်ခြင်း button
+        document.getElementById('calculateBtn').onclick = calculateLMT;
+
+        // MST input ပြောင်းလဲမှုကို နားထောင်ခြင်း
+        document.getElementById('mstTime').addEventListener('change', calculateLMT);
+
+        // စာမျက်နှာစတင်ခြင်း
+        renderTable(cityData);
+        updateCurrentTime();
+        
+        // လက်ရှိအချိန်ကို စက္ကန့် ၃၀ တစ်ကြိမ် update လုပ်မယ်
+        setInterval(updateCurrentTime, 30000);
+        
+        // ပထမဆုံးမြို့ကို အလိုအလျောက်ရွေးချယ်မယ်
+        setTimeout(() => {
+            if (tableBody.firstChild) {
+                tableBody.firstChild.click();
+            }
+        }, 100);
+    </script>
+<footer style="
+    text-align: center; 
+    padding: 20px; 
+    margin-top: 50px; 
+    border-top: 1px solid #ddd; 
+    color: #666; 
+    font-size: 14px;
+">
+    <p>&copy; 2026 Zaw Aung Htut. All rights reserved.</p>
+</footer>
+</body>
+</html>
